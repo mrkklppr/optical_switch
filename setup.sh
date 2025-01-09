@@ -6,7 +6,11 @@ sudo apt update && sudo apt upgrade -y
 
 # Install Python and necessary dependencies
 echo "Installing Python and dependencies..."
-sudo apt install -y python3-pip python3-dev libssl-dev libffi-dev build-essential
+sudo apt install -y python3 python3-dev python3-pip libssl-dev libffi-dev build-essential
+
+# Install required Python packages via apt
+echo "Installing Flask, Flask-SQLAlchemy, Flask-Bcrypt, and pyserial via apt..."
+sudo apt install -y python3-flask python3-flask-sqlalchemy python3-flask-bcrypt python3-pyserial
 
 # Enable the Raspberry Pi serial interface
 echo "Enabling Raspberry Pi serial interface..."
@@ -28,14 +32,6 @@ echo "Creating project directory..."
 mkdir -p ~/optical_switch
 sudo chown -R $(whoami):$(whoami) ~/optical_switch
 cd ~/optical_switch
-
-# Install required Python packages globally
-if [ -f requirements.txt ]; then
-    echo "Installing Python packages from requirements.txt..."
-    pip3 install -r requirements.txt
-else
-    echo "requirements.txt not found. Skipping Python package installation."
-fi
 
 # Run the database initialization script
 if [ -f initialize_db.py ]; then
