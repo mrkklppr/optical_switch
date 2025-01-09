@@ -6,32 +6,26 @@ sudo apt update && sudo apt upgrade -y
 
 # Install Python and necessary dependencies
 echo "Installing Python and dependencies..."
-sudo apt install -y python3 python3-dev python3-pip libssl-dev libffi-dev build-essential
-
-# Install required Python packages via apt
-echo "Installing Flask, Flask-SQLAlchemy, Flask-Bcrypt, and pyserial via apt..."
-sudo apt install -y python3-flask python3-flask-sqlalchemy python3-flask-bcrypt python3-pyserial
-
-# Enable the Raspberry Pi serial interface
-echo "Enabling Raspberry Pi serial interface..."
-if ! grep -q "enable_uart=1" /boot/config.txt; then
-    echo "enable_uart=1" | sudo tee -a /boot/config.txt
-else
-    echo "Serial interface already enabled in /boot/config.txt."
-fi
-
-# Disable serial console to free the serial port
-echo "Disabling serial console..."
-sudo systemctl stop serial-getty@ttyS0.service
-sudo systemctl disable serial-getty@ttyS0.service
-sudo systemctl stop serial-getty@ttyAMA0.service
-sudo systemctl disable serial-getty@ttyAMA0.service
+sudo apt install -y python3 python3-pip python3-venv python3-dev libssl-dev libffi-dev build-essential python3-serial
 
 # Create the project directory
 echo "Creating project directory..."
 mkdir -p ~/optical_switch
 sudo chown -R $(whoami):$(whoami) ~/optical_switch
-cd ~/optical_switch
+cd ~/optical_switch || { echo "Failed to enter project directory"; exit 1; }
+
+# Copy required project files (ensure the required files are available in the same directory)
+echo "Copying project files..."
+if [ -f "../app.py" ] && [ -f "../initialize_db.py" ] && [ -f "../create_user.py" ] && [ -d "../static" ] && [ -d "../templates" ]; then
+    cp ../app.py .
+    cp ../initialize_db.py .
+    cp ../create_user.py .
+    cp -r ../static .
+    cp -r ../templates .
+else
+    echo "Required files or directories not found. Please ensure all files are present in the parent directory."
+    exit 1
+fi
 
 # Run the database initialization script
 if [ -f initialize_db.py ]; then
@@ -43,26 +37,15 @@ fi
 
 # Run the user creation script
 if [ -f create_user.py ]; then
-    echo "Running user creation script..."
+    echo "Creating user..."
     python3 create_user.py
 else
     echo "create_user.py not found. Skipping user creation."
 fi
 
-# Generate a self-signed SSL certificate for HTTPS
-echo "Generating a self-signed SSL certificate..."
-CERT_DIR=~/optical_switch
-SSL_KEY=${CERT_DIR}/server.key
-SSL_CERT=${CERT_DIR}/server.crt
-
-if [ ! -f "${SSL_KEY}" ] || [ ! -f "${SSL_CERT}" ]; then
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout "${SSL_KEY}" -out "${SSL_CERT}" \
-        -subj "/C=US/ST=YourState/L=YourCity/O=YourOrganization/CN=localhost"
-    echo "SSL certificate generated at ${SSL_CERT}."
-else
-    echo "SSL certificate already exists."
-fi
+# Enable Raspberry Pi serial interface
+echo "Enabling Raspberry Pi serial interface..."
+sudo raspi-config nonint do_serial 0 1
 
 # Set up a systemd service to run the Flask app in the background
 echo "Setting up systemd service..."
@@ -87,13 +70,11 @@ sudo systemctl daemon-reload
 sudo systemctl enable optical_switch.service
 sudo systemctl start optical_switch.service
 
-echo "Setup complete. The Optical Switch Flask app is now running with HTTPS."
-
-# Ask the user if they want to reboot
-read -p "Do you want to reboot the Raspberry Pi now? (yes/no): " REBOOT_CHOICE
-if [[ "$REBOOT_CHOICE" =~ ^(yes|y)$ ]]; then
-    echo "Rebooting the Raspberry Pi..."
+# Ask the user if they want to reboot the system
+read -p "Setup complete. Do you want to reboot now? (yes/no): " REBOOT_ANSWER
+if [[ $REBOOT_ANSWER == "yes" || $REBOOT_ANSWER == "y" ]]; then
+    echo "Rebooting the system..."
     sudo reboot
 else
-    echo "Reboot skipped. Please reboot manually to apply all changes."
+    echo "Setup finished. Please reboot manually if required."
 fi
