@@ -6,7 +6,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Install Python and necessary dependencies
 echo "Installing Python and dependencies..."
-sudo apt install -y python3 python3-pip python3-venv python3-dev libssl-dev libffi-dev build-essential python3-serial
+sudo apt install -y python3 python3-pip python3-venv python3-dev libssl-dev libffi-dev python3-serial
 
 # Create the project directory
 echo "Creating project directory..."
