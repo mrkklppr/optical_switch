@@ -8,6 +8,21 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing Python and dependencies..."
 sudo apt install -y python3-pip python3-dev libssl-dev libffi-dev build-essential
 
+# Enable the Raspberry Pi serial interface
+echo "Enabling Raspberry Pi serial interface..."
+if ! grep -q "enable_uart=1" /boot/config.txt; then
+    echo "enable_uart=1" | sudo tee -a /boot/config.txt
+else
+    echo "Serial interface already enabled in /boot/config.txt."
+fi
+
+# Disable serial console to free the serial port
+echo "Disabling serial console..."
+sudo systemctl stop serial-getty@ttyS0.service
+sudo systemctl disable serial-getty@ttyS0.service
+sudo systemctl stop serial-getty@ttyAMA0.service
+sudo systemctl disable serial-getty@ttyAMA0.service
+
 # Create the project directory
 echo "Creating project directory..."
 mkdir -p ~/optical_switch
@@ -77,3 +92,12 @@ sudo systemctl enable optical_switch.service
 sudo systemctl start optical_switch.service
 
 echo "Setup complete. The Optical Switch Flask app is now running with HTTPS."
+
+# Ask the user if they want to reboot
+read -p "Do you want to reboot the Raspberry Pi now? (yes/no): " REBOOT_CHOICE
+if [[ "$REBOOT_CHOICE" =~ ^(yes|y)$ ]]; then
+    echo "Rebooting the Raspberry Pi..."
+    sudo reboot
+else
+    echo "Reboot skipped. Please reboot manually to apply all changes."
+fi
