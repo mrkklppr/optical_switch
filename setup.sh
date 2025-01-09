@@ -6,7 +6,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Install Python and necessary dependencies
 echo "Installing Python and dependencies..."
-sudo apt install -y python3-pip python3-venv python3-dev libssl-dev libffi-dev build-essential
+sudo apt install -y python3-pip python3-dev libssl-dev libffi-dev build-essential
 
 # Create the project directory
 echo "Creating project directory..."
@@ -14,26 +14,10 @@ mkdir -p ~/optical_switch
 sudo chown -R $(whoami):$(whoami) ~/optical_switch
 cd ~/optical_switch
 
-# Set up Python virtual environment
-echo "Setting up Python virtual environment..."
-if python3 -m venv venv; then
-    echo "Virtual environment created successfully."
-else
-    echo "Failed to create virtual environment. Exiting."
-fi
-
-# Activate the virtual environment
-if [ -f venv/bin/activate ]; then
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-else
-    echo "Virtual environment activation script not found. Exiting."
-fi
-
-# Install required Python packages
+# Install required Python packages globally
 if [ -f requirements.txt ]; then
     echo "Installing Python packages from requirements.txt..."
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
 else
     echo "requirements.txt not found. Skipping Python package installation."
 fi
@@ -48,10 +32,25 @@ fi
 
 # Run the user creation script
 if [ -f create_user.py ]; then
-    echo "Creating admin user..."
+    echo "Running user creation script..."
     python3 create_user.py
 else
-    echo "create_user.py not found. Skipping admin user creation."
+    echo "create_user.py not found. Skipping user creation."
+fi
+
+# Generate a self-signed SSL certificate for HTTPS
+echo "Generating a self-signed SSL certificate..."
+CERT_DIR=~/optical_switch
+SSL_KEY=${CERT_DIR}/server.key
+SSL_CERT=${CERT_DIR}/server.crt
+
+if [ ! -f "${SSL_KEY}" ] || [ ! -f "${SSL_CERT}" ]; then
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "${SSL_KEY}" -out "${SSL_CERT}" \
+        -subj "/C=US/ST=YourState/L=YourCity/O=YourOrganization/CN=localhost"
+    echo "SSL certificate generated at ${SSL_CERT}."
+else
+    echo "SSL certificate already exists."
 fi
 
 # Set up a systemd service to run the Flask app in the background
@@ -65,8 +64,7 @@ After=network.target
 [Service]
 User=${USER}
 WorkingDirectory=/home/${USER}/optical_switch
-Environment=PATH=/home/${USER}/optical_switch/venv/bin
-ExecStart=/home/${USER}/optical_switch/venv/bin/python3 /home/${USER}/optical_switch/app.py
+ExecStart=/usr/bin/python3 /home/${USER}/optical_switch/app.py
 
 [Install]
 WantedBy=multi-user.target
@@ -78,4 +76,4 @@ sudo systemctl daemon-reload
 sudo systemctl enable optical_switch.service
 sudo systemctl start optical_switch.service
 
-echo "Setup complete. The Optical Switch Flask app is now running."
+echo "Setup complete. The Optical Switch Flask app is now running with HTTPS."
