@@ -11,10 +11,9 @@ sudo apt update && sudo apt upgrade -y
 echo "Installing Python and dependencies..."
 sudo apt install -y python3 python3-pip python3-venv python3-dev libssl-dev libffi-dev python3-serial python3-flask python3-flask-sqlalchemy python3-flask-bcrypt
 
-# Set ownership and navigate to the project directory
-PROJECT_DIR=~/optical_switch
+# Set ownership of the current working directory
+PROJECT_DIR=$(pwd)
 sudo chown -R $(whoami):$(whoami) "$PROJECT_DIR"
-cd "$PROJECT_DIR" || { echo "Failed to enter project directory"; exit 1; }
 
 # Run database initialization script if present
 if [ -f initialize_db.py ]; then
@@ -33,12 +32,12 @@ else
 fi
 
 # Create SSL Cert
-echo "Creating SSL Cert for https"
+echo "Creating SSL Cert for HTTPS"
 sudo openssl genpkey -algorithm RSA -out server.key
 sudo openssl req -new -key server.key -out server.csr
 sudo openssl x509 -req -in server.csr -signkey server.key -out server.crt
 
-#Change permission files SSL
+# Change permissions for SSL files
 sudo chmod 444 server.crt
 sudo chmod 444 server.key
 
