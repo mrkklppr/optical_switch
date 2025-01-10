@@ -32,6 +32,16 @@ else
     echo "create_user.py not found. Skipping user creation."
 fi
 
+# Create SSL Cert
+echo "Creating SSL Cert for https"
+sudo openssl genpkey -algorithm RSA -out server.key
+sudo openssl req -new -key server.key -out server.csr
+sudo openssl x509 -req -in server.csr -signkey server.key -out server.crt
+
+#Change permission files SSL
+sudo chmod 444 server.crt
+sudo chmod 444 server.key
+
 # Enable Raspberry Pi serial interface
 echo "Enabling Raspberry Pi serial interface..."
 sudo raspi-config nonint do_serial 0 1
