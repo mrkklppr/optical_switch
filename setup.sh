@@ -68,9 +68,11 @@ sudo systemctl daemon-reload
 sudo systemctl enable optical_switch.service
 sudo systemctl start optical_switch.service
 
-# Prompt for system reboot
-read -p "Setup complete. Do you want to reboot now? (yes/no): " REBOOT_ANSWER
-if [[ "$REBOOT_ANSWER" =~ ^(yes|y)$ ]]; then
+# Prompt for system reboot with default to 'yes'
+read -p "Setup complete. Do you want to reboot now? (Y/n): " REBOOT_ANSWER
+REBOOT_ANSWER=${REBOOT_ANSWER:-Y}  # Default to 'Y' if no input is provided
+
+if [[ "$REBOOT_ANSWER" =~ ^[Yy]$ ]]; then
     echo "Rebooting the system..."
     sudo reboot
 else
