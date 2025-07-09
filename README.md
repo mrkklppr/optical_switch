@@ -26,6 +26,8 @@ This repository contains a Flask-based web application and setup script for mana
    - Flask-Bcrypt
    - pyserial
 
+Do all installations with sudo rights
+
    Install the required dependencies by running:
    ```bash
    pip install flask flask-sqlalchemy flask-bcrypt pyserial
@@ -54,7 +56,7 @@ This repository contains a Flask-based web application and setup script for mana
    - Update the system and install required dependencies.
    - Initialize the database and optionally create users.
    - Generate SSL certificates for HTTPS.
-   - Enable the Raspberry Pi serial interface.
+   - Enable the Raspberry Pi serial interface. Click on no fo login shell accessible over serial and yes for serial port hardware enable
    - Configure and start the application as a systemd service.
 
 3. Access the app at `https://<your-ip>:5000`.
